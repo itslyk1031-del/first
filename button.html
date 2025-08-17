@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>JavaScript 예제</title>
+</head>
+<body>
+  <h1>배경색 바꾸기!</h1>
+  <button onclick="changeColor()">색 바꾸기</button>
+
+  <script>
+    function changeColor() {
+      // 랜덤 색상 뽑기
+      const colors = ["pink", "lightblue", "lightgreen", "yellow", "orange"];
+      const random = Math.floor(Math.random() * colors.length);
+
+      // body 배경색 바꾸기
+      document.body.style.backgroundColor = colors[random];
+    }
+  </script>
+</body>
+</html>
