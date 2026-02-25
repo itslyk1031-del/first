@@ -1,180 +1,421 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>은메고의 10월 원두 정기 구독</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-  
-  <link rel="stylesheet" href="style.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>스터디 플래너 (Realtime)</title>
+  <style>
+    :root{
+      --paper:#fbf3df;
+      --ink:#1f1f1f;
+      --accent:#f28c28;
+      --accent2:#e85b2a;
+      --hlDefault:#ffe66b;
+      --softBorder: rgba(0,0,0,.10);
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, "Noto Sans KR", sans-serif;
+      color:var(--ink);
+      background:#eee;
+    }
+
+    /* 배경 줄 제거: 단색 종이 느낌만 */
+    .sheet{
+      width:min(1100px, 96vw);
+      margin:22px auto;
+      background: var(--paper);
+      border-radius:16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.12);
+      overflow:hidden;
+      border:1px solid rgba(0,0,0,.08);
+    }
+
+    header{
+      display:flex;
+      gap:16px;
+      align-items:flex-end;
+      justify-content:space-between;
+      padding:18px 18px 12px 18px;
+      border-bottom:1px solid rgba(0,0,0,.08);
+      background: rgba(255,255,255,.22);
+    }
+
+    .h-left{
+      display:flex;
+      gap:14px;
+      align-items:flex-end;
+      flex-wrap:wrap;
+    }
+
+    .dday{
+      font-weight:900;
+      font-size:34px;
+      letter-spacing:-0.5px;
+      user-select:none;
+    }
+
+    .meta{
+      display:flex;
+      gap:10px;
+      align-items:end;
+      flex-wrap:wrap;
+    }
+
+    .field label{
+      font-size:12px;
+      opacity:.75;
+      display:block;
+      margin-bottom:2px;
+      user-select:none;
+    }
+
+    .field input{
+      border:1px solid rgba(0,0,0,.18);
+      background: rgba(255,255,255,.55);
+      border-radius:10px;
+      padding:8px 10px;
+      font-size:14px;
+      outline:none;
+    }
+
+    .goal input{width:min(440px, 60vw);}
+
+    .btnrow{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:flex-end;
+    }
+
+    button{
+      border:1px solid rgba(0,0,0,.18);
+      background: rgba(255,255,255,.55);
+      border-radius:12px;
+      padding:8px 10px;
+      cursor:pointer;
+      font-size:13px;
+      white-space:nowrap;
+    }
+    button:hover{filter:brightness(0.98)}
+    button:active{transform:translateY(1px)}
+    
+    /* 구글 로그인 버튼 강조 */
+    #authBtn {
+      background: #4285f4;
+      color: white;
+      border: none;
+      font-weight: bold;
+    }
+    #authBtn.logged-in {
+      background: rgba(255,255,255,.55);
+      color: var(--ink);
+      border:1px solid rgba(0,0,0,.18);
+      font-weight: normal;
+    }
+
+    .badge{
+      font-size:12px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid rgba(0,0,0,.14);
+      background: rgba(255,255,255,.45);
+      opacity:.9;
+      user-select:none;
+      max-width: 320px;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+    }
+
+    .layout{
+      display:grid;
+      grid-template-columns: 1.65fr 1fr;
+      min-height:690px;
+    }
+
+    .left, .right{padding:16px 18px;}
+
+    .section-title{
+      font-weight:900;
+      letter-spacing:.8px;
+      font-size:13px;
+      opacity:.85;
+      margin:12px 0 8px;
+      user-select:none;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+
+    .tasks{display:flex; flex-direction:column; gap:8px;}
+
+    .task{
+      --hlc: var(--hlDefault);
+      display:grid;
+      grid-template-columns: 22px 1fr 74px 38px 34px;
+      gap:8px;
+      align-items:center;
+      padding:7px 9px;
+      border-radius:12px;
+      background: rgba(255,255,255,.25);
+      border:1px solid var(--softBorder);
+    }
+
+    .task input[type="checkbox"]{
+      accent-color: var(--accent2);
+      width: 18px;
+      height: 18px;
+      cursor:pointer;
+    }
+
+    .task input[type="text"]{
+      width:100%;
+      border:none;
+      background:transparent;
+      outline:none;
+      font-size:14px;
+      color:var(--ink);
+    }
+
+    .tag{
+      font-size:12px;
+      text-align:right;
+      opacity:.75;
+      padding:2px 4px;
+      border-radius:8px;
+      outline:none;
+    }
+
+    .hlpick{
+      width:38px;
+      height:34px;
+      padding:0;
+      border-radius:10px;
+      border:1px solid rgba(0,0,0,.14);
+      background: rgba(255,255,255,.5);
+      cursor:pointer;
+    }
+
+    .del{
+      width:34px;
+      height:34px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      border-radius:10px;
+      border:1px solid rgba(0,0,0,.12);
+      background: rgba(255,255,255,.45);
+      cursor:pointer;
+      user-select:none;
+    }
+
+    .task.hl{
+      background: linear-gradient(transparent 56%, var(--hlc) 56%);
+      border-color: rgba(0,0,0,.08);
+    }
+
+    .task.done{
+      background: linear-gradient(90deg, rgba(242,140,40,.95), rgba(232,91,42,.90));
+      border: 1px solid rgba(0,0,0,.06);
+      box-shadow: 0 6px 14px rgba(232,91,42,.18);
+    }
+    .task.done input[type="text"],
+    .task.done .tag{ color: rgba(255,255,255,.98); opacity:1; }
+    .task.done input[type="text"]::placeholder{ color: rgba(255,255,255,.75); }
+
+    textarea{
+      width:100%; min-height:140px; border:1px solid rgba(0,0,0,.18);
+      background: rgba(255,255,255,.35); border-radius:12px; padding:10px;
+      resize:vertical; outline:none; font-size:14px; line-height:1.45;
+    }
+
+    .subbtns{
+      display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; align-items:center;
+    }
+
+    .subbtns .colorbox{
+      display:flex; gap:8px; align-items:center; border:1px solid rgba(0,0,0,.12);
+      background: rgba(255,255,255,.35); border-radius:12px; padding:6px 10px; font-size:13px;
+    }
+    .subbtns input[type="color"]{
+      width:34px;height:30px;padding:0;border-radius:10px;border:1px solid rgba(0,0,0,.14);
+      background: rgba(255,255,255,.5); cursor:pointer;
+    }
+
+    .right{ border-left:1px solid rgba(0,0,0,.08); position:relative; }
+
+    .timegrid{
+      display:grid; grid-template-columns: 52px repeat(6, 1fr); gap:6px;
+      margin-top:6px; align-items:stretch;
+    }
+
+    .hourhead, .thead{
+      display:flex; align-items:center; justify-content:center; font-size:12px;
+      opacity:.75; user-select:none; border-radius:10px;
+      background: rgba(255,255,255,.22); border:1px solid rgba(0,0,0,.10); padding:6px 0;
+    }
+
+    .hourcell{
+      display:flex; align-items:center; justify-content:center; font-size:12px;
+      opacity:.75; user-select:none; border-radius:10px;
+      background: rgba(255,255,255,.18); border:1px solid rgba(0,0,0,.10); padding:6px 0;
+    }
+
+    .tcell{
+      border:1px solid rgba(0,0,0,.12); border-radius:10px; background: rgba(255,255,255,.22);
+      cursor:pointer; min-height:34px; position:relative; overflow:hidden;
+    }
+
+    .tcell.filled{
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      border-color: rgba(0,0,0,.08); opacity:.92;
+    }
+
+    .school{
+      position:absolute; right:18px; top:250px; font-weight:900; letter-spacing:2px;
+      color: var(--accent2); opacity:.9; transform: rotate(-1deg); user-select:none; pointer-events:none;
+    }
+
+    .hint{
+      font-size:12px; opacity:.78; margin-top:10px; line-height:1.35;
+    }
+
+    @media (max-width: 900px){
+      .layout{grid-template-columns:1fr; }
+      .right{border-left:none; border-top:1px solid rgba(0,0,0,.08);}
+      .school{top: 18px; right: 18px; opacity:.45}
+    }
+  </style>
 </head>
+
 <body>
-  <!-- 헤더 -->
-  <header>
-    <nav>
-      <h1 class="logo"> 은메고의 10월 원두정기구독</h1>
-      <div>
-        <button class="lang"><i class="fa-solid fa-globe"></i>한국어 <i class="fa-solid fa-caret-down"></i></button>
-        <button>로그인</button>
-      </div>
-    </nav>
-    <div class="header-content">
-      <h2>매일 특별한 커피 타임</h2>
-      <h3>고객님의 취향에 맞게 스페셜 커피를 즐겨 보세요</h3>
-      <p>이메일 주소를 보내시면 구독 안내문과 새로운 소식들을 보내 드립니다.</p>
-      <form class="add-email">
-        <input type="email" placeholder="이메일 주소" required>
-        <button type="submit">보내기</button>
-      </form>
-    </div>
-  </header>
+  <div class="sheet">
+    <header>
+      <div class="h-left">
+        <div class="dday">D-<span id="ddayNum">0</span></div>
 
-  <!-- 배너 -->
-  <section id="banner">
-    <div class="banner-content">
-      <h3>정성을 다해 로스팅한 커피를 매주 보내드립니다</h3>
-      <p>스위커 매장의 맛있는 커피를 집에서도 즐기세요</p>
-      <button>자세히 알아보기</button>
-    </div>
-    <h2>지금 막 로스팅했어요</h2>
-    <select class="select-menu">
-      <option value="light">라이트 로스트</option>
-      <option value="medium">미디엄 로스트</option>
-      <option value="dark">다크 로스트</option>
-    </select>
-  </section>
-
-  <!-- 멤버십 -->
-  <section id="membership">
-    <h2>회원이 되시면</h2>
-    <div class="membership-content">
-      <h3>월간스위커 회원 혜택</h3>
-      <p>스위커 온라인몰 구매 시 커피원두, 드립백 상품 3% 할인</p>
-      <p>스위커 온라인몰 5,000원 상품권 증정</p>
-    </div>
-  </section>  
-
-  <!-- 선택 가이드 -->
-  <section id="choice">
-    <h2>타입별 선택 가이드</h2>
-    <div class="choice-content">
-      <div class="card">
-       <h3>너티드 커피</h3> 
-       <p>고소한, 구수한, 산미가 약한 커피</p>   
-       <div class="bean-img">
-        <img src="images/beans.png" alt="">
-       </div>    
-      </div>
-      <div class="card">
-        <h3>비비드 커피</h3> 
-        <p>꽃, 허브, 과일, 산미가 있는 커피</p>
-        <div class="bean-img">
-          <img src="images/beans.png" alt="">
-         </div>  
-      </div>
-      <div class="card">
-        <h3>다크 커피</h3> 
-        <p>쌉쌀한, 달콤한, 산미가 없는 커피</p>
-        <div class="bean-img">
-          <img src="images/beans.png" alt="">
-         </div>  
-      </div>
-      <div class="card">
-        <h3>로스터가 추천하는 커피</h3>     
-        <div class="bean-img">
-          <img src="images/beans.png" alt="">
-         </div>  
-      </div>
-    </div>
-  </section>  
-
-  <!-- FAQ -->
-  <section id="faq">
-    <h2>자주하는 질문과 답변</h2>
-    <ul class="accordion">
-      <li>
-        <input type="radio" name="accordion" id="first">
-        <label for="first">주문은 어떻게 하나요?</label>
-        <div class="content">          
-          <p>스위커 온라인몰에서 주문하셔도 되고, 000-0000-0000d으로 전화해서 궁금한 것들을 확인한 후 주문하셔도 됩니다.</p>
-        </div>
-      </li>
-      <li>
-        <input type="radio" name="accordion" id="second">
-        <label for="second">주문 용량은 어떻게 되나요?</label>
-        <div class="content">
-          <p>고객님의 취향에 맞는 커피를 매주 또는 격주로 배송합니다. 주문 용량은 원두별로 100g씩, 200g씩 필요한 양을 주문하시면 됩니다. </p>
-          <p>같은 종류의 커피로 200g을 주문할 수도 있고, 다른 종류의 커피로 100g씩 2개를 주문하셔도 됩니다.</p>
-          <p>홈카페를 위한 100g, 200g 포장과 오피스카페를 위한 500g, 1kg 포장이 있습니다. </p>
-        </div>
-      </li>
-      <li>
-        <input type="radio" name="accordion" id="third">
-        <label for="third">언제 배송되나요?</label>
-        <div class="content">
-          <p>매주 목요일에 배송 출발합니다. 제주도내는 금요일에 받으실 수 있고 도외는 토요일에 받으실 수 있습니다. </p>
-          <p>단, 목요일이 공휴일이거나 택배 물량이 몰리는 시즌일 경우 하루 이틀 조정될 수 있습니다.</p>
-        </div>
-      </li>
-      <li>
-        <input type="radio" name="accordion" id="fourth">
-        <label for="fourth">원두 추천해 줄 수 있나요?</label>
-        <div class="content">
-          <p>'로스터가 추천하는 커피'를 선택하시면 고객님과 상담 후 고객님께 맞는 제품으로 매주 혹은 격주로 배송해 드립니다. </p>
-          <p>그 외에 특별히 원하는 원두가 있을 경우 000-0000-0000으로 전화주시면 도와드리겠습니다.</p>
-        </div>
-      </li>
-    </ul>
-    <div class="newsletter">
-      <p>이메일 주소를 보내시면 구독 안내문과 새로운 소식들을 보내 드립니다.</p>
-      <form class="add-email">
-        <input type="email" placeholder="이메일 주소" required>
-        <button type="submit">보내기</button>
-      </form>      
-    </div>
-  </section>  
-
-  <!-- 푸터 -->
-  <footer>
-    <div class="footer-content">
-      <div class="col left">
-        <ul class="footer-nav">
-          <li><a href="#">매장안내</a></li>
-          <li><a href="#">이용약관</a></li>
-          <li><a href="#">개인정보 취급방침</a></li>
-          <li><a href="#">이용안내</a></li>
-        </ul>
-        <div class="footer-info">
-          <p>상호: XXXXX (대표 : 홍길동)</p>
-          <p>주소 : 제주특별자치도 제주시 해안마을 5길 </p>
-          <p>전화 : 000-0000-0000</p>
-          <p>사업자등록번호 : 000-00-00000</p>
+        <div class="meta">
+          <div class="field">
+            <label>DATE</label>
+            <input id="date" type="date" />
+          </div>
+          <div class="field goal">
+            <label>GOAL</label>
+            <input id="goal" type="text" placeholder="오늘의 목표" />
+          </div>
         </div>
       </div>
-      <div class="col center">
-        <h2>고객센터</h2>
-        <h3>070-000-0000</h3>
-        <p>월-금 09:00-18:00</p>
-        <ul class="socials">
-          <li><a href="#"><i class="fa-brands fa-instagram"></i></a></li>
-          <li><a href="#"><i class="fa-brands fa-square-facebook"></i></a></li>
-          <li><a href="#"><i class="fa-brands fa-youtube"></i></a></li>
-        </ul>
+
+      <div class="btnrow">
+        <div class="badge" id="syncBadge">대기 중...</div>
+        <!-- ✅ 구글 로그인 버튼 추가 -->
+        <button id="authBtn">구글 로그인</button>
+        <button id="exportBtn">내보내기(JSON)</button>
+        <button id="importBtn">가져오기(JSON)</button>
+        <button id="clearBtn">오늘 초기화</button>
       </div>
-      <div class="col right">
-        <h2>커뮤니티</h2>
-        <p><a href="#">공지사항</a></p>
-        <p><a href="#">이벤트</a></p>
-        <p><a href="#">상품 Q&A</a></p>
-      </div>
+    </header>
+
+    <div class="layout">
+      <section class="left">
+        <div class="section-title"><span>TASK</span></div>
+        <div id="tasks" class="tasks"></div>
+        <div class="subbtns">
+          <button id="addTaskBtn">+ TASK 추가</button>
+          <button id="toggleHLBtn" title="마지막 TASK 형광펜 토글">형광펜(마지막)</button>
+          <div class="colorbox" title="형광펜 기본 색(마지막 토글 시 적용)">
+            <span>형광펜 색</span>
+            <input id="hlColorGlobal" type="color" value="#ffe66b" />
+          </div>
+        </div>
+        <div class="section-title" style="margin-top:16px;">MEMO</div>
+        <textarea id="memo" placeholder="메모 / 생활 / 제한시간 기록 등"></textarea>
+      </section>
+
+      <aside class="right">
+        <div class="section-title">TIME</div>
+        <div class="timegrid" id="timegrid"></div>
+        <div class="school">SCHOOL</div>
+        <div class="hint">
+          <b>사용 방법:</b> 상단의 [구글 로그인]을 클릭하여 로그인하세요. 로그인된 동일한 구글 계정을 사용하면 PC와 스마트폰 등 어디서든 <b>실시간으로 데이터가 연동</b>됩니다.
+        </div>
+      </aside>
     </div>
-    <div class="copyright">
-      <p>Copyright &copy; 스테이위드커피. All rights reserved.</p>
-    </div>
+  </div>
 
-  </footer>  
-</body>
+  <script type="module">
+    /***********************
+     * 0) Firebase 설정값 (자신의 프로젝트 키로 변경 필수!)
+     ***********************/
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_AUTH_DOMAIN",
+      projectId: "YOUR_PROJECT_ID",
+      appId: "YOUR_APP_ID",
+    };
 
-</html>
+    /***********************
+     * 1) Firebase SDK import (구글 로그인 모듈 추가)
+     ***********************/
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import {
+      getAuth,
+      onAuthStateChanged,
+      GoogleAuthProvider,
+      signInWithPopup,
+      signOut
+    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+    import {
+      getFirestore,
+      doc,
+      setDoc,
+      serverTimestamp,
+      onSnapshot
+    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
+    const $ = (s)=>document.querySelector(s);
+    const tasksEl = $("#tasks"), dateEl = $("#date"), goalEl = $("#goal");
+    const memoEl = $("#memo"), badgeEl = $("#syncBadge"), hlColorGlobalEl = $("#hlColorGlobal");
+    const authBtn = $("#authBtn"); // 로그인 버튼 요소 추가
 
+    const HOURS = [6,7,8,9,10,11,12, 1,2,3,4,5,6,7,8,9,10,11,12, 1];
+    const MIN_COLS = 6;
+    const MIN_LABELS = [0,10,20,30,40,50];
+
+    function ymd(d){ return d.toISOString().slice(0,10); }
+    function escapeHtml(str){ return (str ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;"); }
+    function debounce(fn, ms){ let t; return (...args)=>{ clearTimeout(t); t=setTimeout(()=>fn(...args), ms); }; }
+
+    function defaultState(){
+      return { goal: "", memo: "", tasks: [], timeCells: Array.from({ length: HOURS.length * MIN_COLS }, () => 0), updatedAt: null };
+    }
+
+    function applyTaskDoneUI(row){ row.classList.toggle("done", row.querySelector('input[type="checkbox"]').checked); }
+
+    function addTaskRow(t={done:false,text:"",hl:false,hlc:hlColorGlobalEl.value,tag:""}){
+      const row = document.createElement("div");
+      row.className = "task" + (t.hl ? " hl" : "");
+      row.style.setProperty("--hlc", t.hlc || hlColorGlobalEl.value);
+      row.innerHTML = `
+        <input type="checkbox" ${t.done?"checked":""} />
+        <input type="text" value="${escapeHtml(t.text)}" placeholder="할 일 입력" />
+        <div class="tag" contenteditable="true">${escapeHtml(t.tag||"")}</div>
+        <input class="hlpick" type="color" value="${escapeHtml(t.hlc || hlColorGlobalEl.value)}" title="형광펜 색" />
+        <div class="del" title="삭제">✕</div>
+      `;
+      applyTaskDoneUI(row);
+      row.querySelector('input[type="checkbox"]').addEventListener("change", ()=>{ applyTaskDoneUI(row); saveDebounced(); });
+      row.querySelector(".hlpick").addEventListener("input", (e)=>{ row.style.setProperty("--hlc", e.target.value); saveDebounced(); });
+      row.querySelector(".del").addEventListener("click", ()=>{ row.remove(); saveDebounced(); });
+      row.addEventListener("input", saveDebounced);
+      tasksEl.appendChild(row);
+    }
+
+    function renderTasks(tasks){ tasksEl.innerHTML = ""; (tasks || []).forEach(t=>addTaskRow(t)); }
+
+    function renderTimeGrid
